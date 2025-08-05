@@ -1,127 +1,107 @@
-# EC2 Lambda Scheduler with SNS Notifications
+# EC2 Lambda Scheduler Test
 
-This project demonstrates how to use an AWS Lambda function to automatically start and stop EC2 instances and notify via Amazon SNS. It includes manual control via test events and automated scheduling using Amazon EventBridge.
+This repository demonstrates how to use AWS Lambda to start and stop all EC2 instances in a region, with email notifications via SNS and automatic daily scheduling using Amazon EventBridge.
 
----
+## Features
 
-## 📌 Features
+- ✅ Start or stop **all EC2 instances** in a given region.
+- 📧 Send **SNS email notifications** for both success and failure events.
+- 🕗 **Scheduled stop** at 8 PM IST using **Amazon EventBridge**.
+- 🧪 Manual invocation support for testing.
 
-- ✅ Start and Stop **all EC2 instances** in a region
-- ✅ Send **SNS email notifications** on success or failure
-- ✅ Schedule automatic stop using **EventBridge** (e.g., daily at 8 PM IST)
-- ✅ Notify when EC2 control actions succeed or fail
+## Lambda Function Overview
 
----
+- Language: **Python 3.12**
+- Dependencies: Uses `boto3` (already available in AWS Lambda)
+- Triggered manually or by EventBridge.
+- Sends notifications via Amazon SNS.
 
-## 📁 Project Structure
+## How It Works
 
-├── lambda_ec2_control.py # Lambda function to start/stop EC2 & send SNS alerts
+- The Lambda function:
+  - Fetches all EC2 instance IDs in the specified region.
+  - Starts or stops them based on the `event["action"]` input.
+  - Sends an SNS email with a list of affected instances.
+  - Catches and reports any errors via SNS.
 
-├── README.md # Project documentation
+## Files
 
-## 🧱 Infrastructure as Code (YAML)
----
-## 🚀 How It Works
+- `lambda.py` – The core Lambda function.
+- `README.md` – This file.
 
-1. Deploy the `lambda_ec2_control.py` code in an AWS Lambda function.
-2. Attach an IAM role with EC2 and SNS permissions.
-3. Create an SNS topic and subscribe your email address.
-4. Trigger the function manually or using EventBridge scheduler.
-5. Lambda stops/starts all EC2 instances and sends SNS notification.
+## Setup Instructions
 
----
+### 1. Create an SNS Topic
 
-## 📥 Sample Lambda Event Input
+- Go to **Amazon SNS > Topics > Create topic**
+- Type: **Standard**
+- Name: `ec2-notifier`
+- Create a subscription (email) and confirm it.
 
-To **start** all instances:
+### 2. Create IAM Role for Lambda
+
+Attach a policy with the following permissions:
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartInstances",
+        "ec2:StopInstances",
+        "ec2:DescribeInstances",
+        "sns:Publish"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+### 3. Create Lambda Function
+
+- Runtime: Python 3.12
+- Timeout: 30 seconds
+- Paste contents from `lambda.py`
+- Add environment variable: `SNS_TOPIC_ARN` = `arn:aws:sns:REGION:ACCOUNT_ID:ec2-notifier`
+- Attach the IAM role created above.
+
+### 4. Add Manual Testing Event
+
 ```json
 {
   "action": "start"
 }
-To stop all instances:
+```
 
-json
-Copy
-Edit
+or
+
+```json
 {
   "action": "stop"
 }
-🛠️ Prerequisites
-✅ AWS account
+```
 
-✅ EC2 instances in running/stopped state
+### 5. Schedule EC2 Stop at 8 PM IST
 
-✅ Confirmed SNS email subscription
+- Go to **Amazon EventBridge > Scheduler**
+- Create a new rule:
+  - Fixed rate: `Every 1 day`
+  - Time: `14:30 UTC` (which is 8:00 PM IST)
+  - Target: Your Lambda function
+  - Constant input: `{ "action": "stop" }`
 
-✅ IAM Role for Lambda with permissions:
+## Expected Output
 
-ec2:StartInstances
+- 🟢 Email: EC2 Instances Started
+- 🔴 Email: EC2 Instances Stopped
+- ⚠️  Email: Error message if something fails
 
-ec2:StopInstances
+## Repository Name
 
-ec2:DescribeInstances
+> `ec2-lambda-scheduler-test`
 
-sns:Publish
+## Author
 
-⏰ EventBridge Schedule Setup
-To stop instances every day at 8 PM IST (2:30 PM UTC):
-
-Go to Amazon EventBridge > Rules > Create Rule
-
-Select:
-
-Rule type: Schedule
-
-Cron expression:
-
-scss
-Copy
-Edit
-cron(30 14 * * ? *)
-(This means 14:30 UTC = 20:00 IST)
-
-Target: your Lambda function
-
-✅ Expected Output
-You will receive an email from SNS like this:
-
-Subject:
-nginx
-Copy
-Edit
-EC2 Instances Stopped
-Body:
-diff
-Copy
-Edit
-EC2 instances stopped:
-- i-0123abc456def7890
-- i-0abc123def4567890
-In case of failure:
-
-javascript
-Copy
-Edit
-Error occurred while stopping EC2 instances:
-<Error details>
-🧪 Testing the Function
-Open AWS Lambda Console
-
-Choose your function
-
-Select Test
-
-Create a test event with:
-
-json
-Copy
-Edit
-{ "action": "start" }
-or
-
-json
-Copy
-Edit
-{ "action": "stop" }
-Check your email for results
-
+Silicon IT Hub — DevOps Testing
