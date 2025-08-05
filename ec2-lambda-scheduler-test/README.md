@@ -103,3 +103,4 @@ or
 > `ec2-lambda-scheduler-test`
 
 ## Author
+Amit Rana
