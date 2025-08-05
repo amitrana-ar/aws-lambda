@@ -26,7 +26,7 @@ This repository demonstrates how to use AWS Lambda to start and stop all EC2 ins
 
 ## Files
 
-- `lambda.py` – The core Lambda function.
+- `lambda_ec2_control.py` – The core Lambda function.
 - `README.md` – This file.
 
 ## Setup Instructions
@@ -103,5 +103,3 @@ or
 > `ec2-lambda-scheduler-test`
 
 ## Author
-
-Silicon IT Hub — DevOps Testing
