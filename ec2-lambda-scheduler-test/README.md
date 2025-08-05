@@ -15,7 +15,6 @@ This project demonstrates how to use an AWS Lambda function to automatically sta
 
 ## 📁 Project Structure
 
-.
 ├── lambda_ec2_control.py # Lambda function to start/stop EC2 & send SNS alerts
 
 ├── README.md # Project documentation
